@@ -50,7 +50,7 @@ new CronJob('0 */1 * * * *', function () {
                 updateData(pdata, data);
             }
             else if (data.provider == "flipkart") {
-                
+
                 var res = request('GET', "https://affiliate-api.flipkart.net/affiliate/product/json?id=" + data.pid, {
                     'headers': {
                         "Fk-Affiliate-Id": "skycoresa",
