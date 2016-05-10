@@ -77,47 +77,65 @@ new CronJob('0 */1 * * * *', function () {
                 }
 
 
-
             }
 
             function updateData(pdata, data) {
                 if (pdata.availability != data.current_state) {
 
 
-                    ref.child('users').once('value',function (snapshot) {
+                    ref.child('users').once('value', function (snapshot) {
                         snapshot.forEach(function (childsnap) {
                             var user = childsnap.val();
-                            for(var i=0;i<user.wishlist.length;i++){
-                                if(user.wishlist[i] == data.provider+"-"+data.pid){
-                                    console.log(user.email + " :: " +user.firstname);
+                            if(childsnap.child('wishlist').exists()) {
 
-                                    var headers = {
-                                        'Content-Type': 'application/json'
-                                    };
 
-                                    var dataString = '{"value1":"' + user.email + '","value2": "' + user.firstname + '" , "value3" :"'+data.title +', status has changed to :'+ pdata.availability+'"}';
+                                for (var i = 0; i < user.wishlist.length; i++) {
+                                    if (user.wishlist[i] == data.provider + "-" + data.pid) {
+                                        console.log(user.email + " :: " + user.firstname);
 
-                                    var options = {
-                                        url: 'https://maker.ifttt.com/trigger/product_status_change/with/key/kPFezeNcht_mGMYW4ld-Hw2ZRtj-nudTZrjXJFXbg2w',
-                                        method: 'POST',
-                                        headers: headers,
-                                        body: dataString
-                                    };
+                                        var headers = {
+                                            'Content-Type': 'application/json'
+                                        };
 
-                                    function callback(error, response, body) {
-                                        if (!error && response.statusCode == 200) {
-                                            console.log(body);
+                                        var dataString = '{"value1":"' + user.email + '","value2": "' + user.firstname + '" , "value3" :"' + data.title + ', status has changed to :' + pdata.availability + '"}';
+
+                                        var options = {
+                                            url: 'https://maker.ifttt.com/trigger/product_status_change/with/key/kPFezeNcht_mGMYW4ld-Hw2ZRtj-nudTZrjXJFXbg2w',
+                                            method: 'POST',
+                                            headers: headers,
+                                            body: dataString
+                                        };
+
+                                        function callback(error, response, body) {
+                                            if (!error && response.statusCode == 200) {
+                                                console.log(body);
+                                            }
+                                            else {
+                                                console.log(error);
+                                            }
                                         }
-                                        else{
-                                            console.log(error);
-                                        }
+
+                                        req(options, callback);
+
+
                                     }
+                                    ref.child('global').once('value', function (snapshot) {
+                                        var k = snapshot.child('no_of_alerts').val();
+                                        if (k == null || k == undefined) {
+                                            k = 1;
+                                        }
+                                        else {
+                                            k++;
+                                        }
 
-                                    req(options, callback);
+                                        ref.child('global').update({
+                                            'no_of_alerts': k
+                                        });
 
-
+                                    });
                                 }
                             }
+
                         });
                     });
 
@@ -156,39 +174,57 @@ new CronJob('0 */1 * * * *', function () {
 
                 if (pdata.effectivePrice != data.current_price) {
 
-                    if(pdata.effectivePrice < data.current_price){
-                        ref.child('users').once('value',function (snapshot) {
+                    if (pdata.effectivePrice < data.current_price) {
+                        ref.child('users').once('value', function (snapshot) {
                             snapshot.forEach(function (childsnap) {
                                 var user = childsnap.val();
-                                for(var i=0;i<user.wishlist.length;i++){
-                                    if(user.wishlist[i] == data.provider+"-"+data.pid){
-                                        console.log(user.email + " :: " +user.firstname);
+                                if(childsnap.child('wishlist').exists()) {
 
-                                        var headers = {
-                                            'Content-Type': 'application/json'
-                                        };
 
-                                        var dataString = '{"value1":"' + user.email + '","value2": "' + user.firstname + '" , "value3" :"'+data.title +', price has droped to :'+ pdata.effectivePrice+'"}';
+                                    for (var i = 0; i < user.wishlist.length; i++) {
+                                        if (user.wishlist[i] == data.provider + "-" + data.pid) {
+                                            console.log(user.email + " :: " + user.firstname);
 
-                                        var options = {
-                                            url: 'https://maker.ifttt.com/trigger/price_drop/with/key/kPFezeNcht_mGMYW4ld-Hw2ZRtj-nudTZrjXJFXbg2w',
-                                            method: 'POST',
-                                            headers: headers,
-                                            body: dataString
-                                        };
+                                            var headers = {
+                                                'Content-Type': 'application/json'
+                                            };
 
-                                        function callback(error, response, body) {
-                                            if (!error && response.statusCode == 200) {
-                                                console.log(body);
+                                            var dataString = '{"value1":"' + user.email + '","value2": "' + user.firstname + '" , "value3" :"' + data.title + ', price has droped to :' + pdata.effectivePrice + '"}';
+
+                                            var options = {
+                                                url: 'https://maker.ifttt.com/trigger/price_drop/with/key/kPFezeNcht_mGMYW4ld-Hw2ZRtj-nudTZrjXJFXbg2w',
+                                                method: 'POST',
+                                                headers: headers,
+                                                body: dataString
+                                            };
+
+                                            function callback(error, response, body) {
+                                                if (!error && response.statusCode == 200) {
+                                                    console.log(body);
+                                                }
+                                                else {
+                                                    console.log(error);
+                                                }
                                             }
-                                            else{
-                                                console.log(error);
-                                            }
+
+                                            req(options, callback);
+
+                                            ref.child('global').once('value', function (snapshot) {
+                                                var k = snapshot.child('no_of_alerts').val();
+                                                if (k == null || k == undefined) {
+                                                    k = 1;
+                                                }
+                                                else {
+                                                    k++;
+                                                }
+
+                                                ref.child('global').update({
+                                                    'no_of_alerts': k
+                                                });
+
+                                            });
+
                                         }
-
-                                        req(options, callback);
-
-
                                     }
                                 }
                             });
@@ -228,4 +264,32 @@ new CronJob('0 */1 * * * *', function () {
 
         });
     });
+
+    ref.child('users').once('value', function (snapshot) {
+        var i = 0;
+        snapshot.forEach(function (childsnap) {
+            i++;
+
+            ref.child('global').update({
+                'no_of_user': i
+            });
+
+        });
+
+    });
+
+    ref.child('products').once('value', function (snapshot) {
+        var i = 0;
+        snapshot.forEach(function (childsnap) {
+            i++;
+
+            ref.child('global').update({
+                'no_of_products': i
+            });
+
+        });
+
+    });
+
+
 }, null, true, 'Asia/Kolkata');
