@@ -1,5 +1,5 @@
 var Firebase = require('firebase');
-//var request = require('request');
+var req = require('request');
 var CronJob = require('cron').CronJob
 var request = require('sync-request');
 
@@ -23,22 +23,7 @@ new CronJob('0 */1 * * * *', function () {
 
 
             if (data.provider == "snapdeal") {
-                /*
-                 var headers = {
-                 'snapdeal-Affiliate-Id': "84198",
-                 'snapdeal-Token-Id': "37dee4a4f049497bda82168d62045b",
-                 'Accept': "application/json"
-                 };
-                 var option = {
-                 url: "http://affiliate-feeds.snapdeal.com/feed/product?id=" + data.pid,
-                 method: "GET",
-                 headers: headers
-                 };
-                 request(option, function (error, response, body) {
-                 var pdata = JSON.parse(body);
-                 updateData(pdata, data);
-                 });
-                 */
+
                 var res = request('GET', "http://affiliate-feeds.snapdeal.com/feed/product?id=" + data.pid, {
                     'headers': {
                         'snapdeal-Affiliate-Id': "84198",
@@ -47,6 +32,7 @@ new CronJob('0 */1 * * * *', function () {
                     }
                 });
                 var pdata = JSON.parse(res.getBody())
+
                 updateData(pdata, data);
             }
             else if (data.provider == "flipkart") {
@@ -89,12 +75,51 @@ new CronJob('0 */1 * * * *', function () {
                     };
                     updateData(pdata, data);
                 }
-                
+
+
 
             }
 
             function updateData(pdata, data) {
                 if (pdata.availability != data.current_state) {
+
+
+                    ref.child('users').once('value',function (snapshot) {
+                        snapshot.forEach(function (childsnap) {
+                            var user = childsnap.val();
+                            for(var i=0;i<user.wishlist.length;i++){
+                                if(user.wishlist[i] == data.provider+"-"+data.pid){
+                                    console.log(user.email + " :: " +user.firstname);
+
+                                    var headers = {
+                                        'Content-Type': 'application/json'
+                                    };
+
+                                    var dataString = '{"value1":"' + user.email + '","value2": "' + user.firstname + '" , "value3" :"'+data.title +', status has changed to :'+ pdata.availability+'"}';
+
+                                    var options = {
+                                        url: 'https://maker.ifttt.com/trigger/product_status_change/with/key/kPFezeNcht_mGMYW4ld-Hw2ZRtj-nudTZrjXJFXbg2w',
+                                        method: 'POST',
+                                        headers: headers,
+                                        body: dataString
+                                    };
+
+                                    function callback(error, response, body) {
+                                        if (!error && response.statusCode == 200) {
+                                            console.log(body);
+                                        }
+                                        else{
+                                            console.log(error);
+                                        }
+                                    }
+
+                                    req(options, callback);
+
+
+                                }
+                            }
+                        });
+                    });
 
                     var temp;
                     ref.child('products').child(data.provider + "-" + data.pid).once('value', function (snapshot) {
@@ -130,6 +155,45 @@ new CronJob('0 */1 * * * *', function () {
 
 
                 if (pdata.effectivePrice != data.current_price) {
+
+                    if(pdata.effectivePrice < data.current_price){
+                        ref.child('users').once('value',function (snapshot) {
+                            snapshot.forEach(function (childsnap) {
+                                var user = childsnap.val();
+                                for(var i=0;i<user.wishlist.length;i++){
+                                    if(user.wishlist[i] == data.provider+"-"+data.pid){
+                                        console.log(user.email + " :: " +user.firstname);
+
+                                        var headers = {
+                                            'Content-Type': 'application/json'
+                                        };
+
+                                        var dataString = '{"value1":"' + user.email + '","value2": "' + user.firstname + '" , "value3" :"'+data.title +', price has droped to :'+ pdata.effectivePrice+'"}';
+
+                                        var options = {
+                                            url: 'https://maker.ifttt.com/trigger/price_drop/with/key/kPFezeNcht_mGMYW4ld-Hw2ZRtj-nudTZrjXJFXbg2w',
+                                            method: 'POST',
+                                            headers: headers,
+                                            body: dataString
+                                        };
+
+                                        function callback(error, response, body) {
+                                            if (!error && response.statusCode == 200) {
+                                                console.log(body);
+                                            }
+                                            else{
+                                                console.log(error);
+                                            }
+                                        }
+
+                                        req(options, callback);
+
+
+                                    }
+                                }
+                            });
+                        });
+                    }
 
                     ref.child('products').child(data.provider + "-" + data.pid).once('value', function (snapshot) {
                         if (snapshot.child('price_change_date').exists()) {
