@@ -6,6 +6,15 @@ var request = require('sync-request');
 
 var ref = new Firebase("https://pricedropalert.firebaseio.com/");
 
+function sleep(milliseconds) {
+    var start = new Date().getTime();
+    for (var i = 0; i < 1e7; i++) {
+        if ((new Date().getTime() - start) > milliseconds){
+            break;
+        }
+    }
+}
+
 
 var j = 0;
 new CronJob('0 */1 * * * *', function () {
@@ -23,7 +32,7 @@ new CronJob('0 */1 * * * *', function () {
 
 
             if (data.provider == "snapdeal") {
-
+                sleep(1000);
                 var res = request('GET', "http://affiliate-feeds.snapdeal.com/feed/product?id=" + data.pid, {
                     'headers': {
                         'snapdeal-Affiliate-Id': "84198",
@@ -36,7 +45,7 @@ new CronJob('0 */1 * * * *', function () {
                 updateData(pdata, data);
             }
             else if (data.provider == "flipkart") {
-
+                sleep(1000);
                 var res = request('GET', "https://affiliate-api.flipkart.net/affiliate/product/json?id=" + data.pid, {
                     'headers': {
                         "Fk-Affiliate-Id": "skycoresa",
@@ -86,11 +95,11 @@ new CronJob('0 */1 * * * *', function () {
                     ref.child('users').once('value', function (snapshot) {
                         snapshot.forEach(function (childsnap) {
                             var user = childsnap.val();
-                            if(childsnap.child('wishlist').exists()) {
+                            if(childsnap.child('notiflist').exists()) {
 
 
-                                for (var i = 0; i < user.wishlist.length; i++) {
-                                    if (user.wishlist[i] == data.provider + "-" + data.pid) {
+                                for (var i = 0; i < user.notiflist.length; i++) {
+                                    if (user.notiflist[i] == data.provider + "-" + data.pid) {
                                         console.log(user.email + " :: " + user.firstname);
 
                                         var headers = {
@@ -134,6 +143,7 @@ new CronJob('0 */1 * * * *', function () {
                                     }
                                    
                                 }
+
                             }
 
                         });
@@ -178,11 +188,11 @@ new CronJob('0 */1 * * * *', function () {
                         ref.child('users').once('value', function (snapshot) {
                             snapshot.forEach(function (childsnap) {
                                 var user = childsnap.val();
-                                if(childsnap.child('wishlist').exists()) {
+                                if(childsnap.child('notiflist').exists()) {
 
 
-                                    for (var i = 0; i < user.wishlist.length; i++) {
-                                        if (user.wishlist[i] == data.provider + "-" + data.pid) {
+                                    for (var i = 0; i < user.notiflist.length; i++) {
+                                        if (user.notiflist[i] == data.provider + "-" + data.pid) {
                                             console.log(user.email + " :: " + user.firstname);
 
                                             var headers = {
@@ -228,6 +238,7 @@ new CronJob('0 */1 * * * *', function () {
 
                                         }
                                     }
+
                                 }
                             });
                         });
@@ -264,6 +275,20 @@ new CronJob('0 */1 * * * *', function () {
                 }
             }
 
+
+            var i = 0;
+            var str = [];
+            snapshot.forEach(function (childsnap) {
+                i++;
+                var x = childsnap.val();
+                str[i] = x.provider + "-" + x.pid;
+                ref.child('global').update({
+                    'no_of_products': i,
+                    'list_products' : str
+                });
+
+            });
+
         });
     });
 
@@ -279,7 +304,7 @@ new CronJob('0 */1 * * * *', function () {
         });
 
     });
-
+/*
     ref.child('products').once('value', function (snapshot) {
         var i = 0;
         var str = [];
@@ -296,5 +321,5 @@ new CronJob('0 */1 * * * *', function () {
 
     });
 
-
+*/
 }, null, true, 'Asia/Kolkata');
