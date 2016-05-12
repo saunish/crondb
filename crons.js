@@ -109,6 +109,19 @@ new CronJob('0 */1 * * * *', function () {
                                         function callback(error, response, body) {
                                             if (!error && response.statusCode == 200) {
                                                 console.log(body);
+                                                ref.child('global').once('value', function (snapshot) {
+                                                    var k = snapshot.child('no_of_alerts').val();
+                                                    if (k == null || k == undefined) {
+                                                        k = 1;
+                                                    }
+                                                    else {
+                                                        k++;
+                                                    }
+                                                    ref.child('global').update({
+                                                        'no_of_alerts': k
+                                                    });
+
+                                                });
                                             }
                                             else {
                                                 console.log(error);
@@ -119,20 +132,7 @@ new CronJob('0 */1 * * * *', function () {
 
 
                                     }
-                                    ref.child('global').once('value', function (snapshot) {
-                                        var k = snapshot.child('no_of_alerts').val();
-                                        if (k == null || k == undefined) {
-                                            k = 1;
-                                        }
-                                        else {
-                                            k++;
-                                        }
-
-                                        ref.child('global').update({
-                                            'no_of_alerts': k
-                                        });
-
-                                    });
+                                   
                                 }
                             }
 
@@ -201,6 +201,21 @@ new CronJob('0 */1 * * * *', function () {
                                             function callback(error, response, body) {
                                                 if (!error && response.statusCode == 200) {
                                                     console.log(body);
+                                                    ref.child('global').once('value', function (snapshot) {
+                                                        var k = snapshot.child('no_of_alerts').val();
+                                                        if (k == null || k == undefined) {
+                                                            k = 1;
+                                                        }
+                                                        else {
+                                                            k++;
+                                                        }
+                                                        
+
+                                                        ref.child('global').update({
+                                                            'no_of_alerts': k
+                                                        });
+
+                                                    });
                                                 }
                                                 else {
                                                     console.log(error);
@@ -209,20 +224,7 @@ new CronJob('0 */1 * * * *', function () {
 
                                             req(options, callback);
 
-                                            ref.child('global').once('value', function (snapshot) {
-                                                var k = snapshot.child('no_of_alerts').val();
-                                                if (k == null || k == undefined) {
-                                                    k = 1;
-                                                }
-                                                else {
-                                                    k++;
-                                                }
-
-                                                ref.child('global').update({
-                                                    'no_of_alerts': k
-                                                });
-
-                                            });
+                                            
 
                                         }
                                     }
@@ -280,11 +282,14 @@ new CronJob('0 */1 * * * *', function () {
 
     ref.child('products').once('value', function (snapshot) {
         var i = 0;
+        var str = [];
         snapshot.forEach(function (childsnap) {
             i++;
-
+            var x = childsnap.val();
+            str[i] = x.provider + "-" + x.pid;
             ref.child('global').update({
-                'no_of_products': i
+                'no_of_products': i,
+                'list_products' : str
             });
 
         });
