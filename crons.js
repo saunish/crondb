@@ -40,49 +40,53 @@ new CronJob('0 */1 * * * *', function () {
                         'Accept': "application/json"
                     }
                 });
-                var pdata = JSON.parse(res.getBody())
+                var pdata = JSON.parse(res.getBody());
 
                 updateData(pdata, data);
             }
             else if (data.provider == "flipkart") {
                 sleep(1000);
-                var res = request('GET', "https://affiliate-api.flipkart.net/affiliate/product/json?id=" + data.pid, {
-                    'headers': {
-                        "Fk-Affiliate-Id": "skycoresa",
-                        "Fk-Affiliate-Token": "8bc5ee22862e442d9f6266200d58d92d"
+                try {
+                    var res = request('GET', "https://affiliate-api.flipkart.net/affiliate/product/json?id=" + data.pid, {
+                        'headers': {
+                            "Fk-Affiliate-Id": "skycoresa",
+                            "Fk-Affiliate-Token": "8bc5ee22862e442d9f6266200d58d92d"
+                        }
+                    });
+                    if (res.getBody() != undefined) {
+                        var tedata = JSON.parse(res.getBody());
+
+                        var pprice = tedata.productBaseInfo.productAttributes.sellingPrice.amount;
+
+                        var t = tedata.productBaseInfo.productAttributes.imageUrls;
+                        var imageurl;
+                        var te = JSON.stringify(t);
+                        var te1 = te.split(",");
+                        var te2 = te1[te1.length - 1].replace(" ", "");
+                        var te3 = te2.replace("}", "");
+                        var te4 = te3.replace(/\"/g, "");
+                        var te5 = te4.split(":");
+                        imageurl = te5[1] + ":" + te5[2];
+
+
+                        var avail;
+                        if (tedata.productBaseInfo.productAttributes.inStock)
+                            avail = "in stock";
+                        else
+                            avail = "out of stock";
+                        pdata = {
+                            'id': tedata.productBaseInfo.productIdentifier.productId,
+                            'title': tedata.productBaseInfo.productAttributes.title,
+                            'brand': tedata.productBaseInfo.productAttributes.productBrand,
+                            'availability': avail,
+                            'link': tedata.productBaseInfo.productAttributes.productUrl,
+                            'imageLink': imageurl,
+                            'effectivePrice': pprice
+                        };
+                        updateData(pdata, data);
                     }
-                });
-                if (res.getBody() != undefined) {
-                    var tedata = JSON.parse(res.getBody());
-
-                    var pprice = tedata.productBaseInfo.productAttributes.sellingPrice.amount;
-
-                    var t = tedata.productBaseInfo.productAttributes.imageUrls;
-                    var imageurl;
-                    var te = JSON.stringify(t);
-                    var te1 = te.split(",");
-                    var te2 = te1[te1.length - 1].replace(" ", "");
-                    var te3 = te2.replace("}", "");
-                    var te4 = te3.replace(/\"/g, "");
-                    var te5 = te4.split(":");
-                    imageurl = te5[1] + ":" + te5[2];
-
-
-                    var avail;
-                    if (tedata.productBaseInfo.productAttributes.inStock)
-                        avail = "in stock";
-                    else
-                        avail = "out of stock";
-                    pdata = {
-                        'id': tedata.productBaseInfo.productIdentifier.productId,
-                        'title': tedata.productBaseInfo.productAttributes.title,
-                        'brand': tedata.productBaseInfo.productAttributes.productBrand,
-                        'availability': avail,
-                        'link': tedata.productBaseInfo.productAttributes.productUrl,
-                        'imageLink': imageurl,
-                        'effectivePrice': pprice
-                    };
-                    updateData(pdata, data);
+                }catch (error){
+                    console.log(error);
                 }
 
 
